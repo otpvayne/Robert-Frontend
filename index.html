@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestión de Usuarios | Node + MySQL</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <h1>Gestión de Usuarios</h1>
+      <p>Conexión a MySQL desde Node.js (Railway)</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="controls">
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Buscar usuario..."
+          />
+          <button id="reloadBtn">Recargar</button>
+        </div>
+
+        <div id="status">Cargando datos...</div>
+
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombres</th>
+              <th>Apellidos</th>
+              <th>Documento</th>
+              <th>Dirección</th>
+              <th>Teléfono</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer>
+      <small>Laboratorio Ingeniería Web I — 2025</small>
+    </footer>
+
+    <script>
+      // 🚀 Importante: URL del backend en Railway
+      const API_URL =
+        "https://lab01-backend-production.up.railway.app/api/users";
+
+      const tableBody = document.querySelector("#usersTable tbody");
+      const statusEl = document.getElementById("status");
+      const searchInput = document.getElementById("searchInput");
+      const reloadBtn = document.getElementById("reloadBtn");
+
+      let cache = [];
+
+      async function fetchUsers() {
+        statusEl.textContent = "Cargando...";
+        try {
+          const res = await fetch(API_URL);
+          const data = await res.json();
+          cache = data;
+          renderRows(data);
+          statusEl.textContent = `✅ ${data.length} registros cargados`;
+        } catch (err) {
+          statusEl.textContent = "❌ Error al cargar datos";
+          console.error(err);
+        }
+      }
+
+      function renderRows(rows) {
+        tableBody.innerHTML = "";
+        for (const user of rows) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.firstName}</td>
+            <td>${user.lastName}</td>
+            <td>${user.document}</td>
+            <td>${user.address}</td>
+            <td>${user.phone}</td>
+            <td><a href="mailto:${user.email}">${user.email}</a></td>`;
+          tableBody.appendChild(tr);
+        }
+      }
+
+      function filterRows(query) {
+        const q = query.toLowerCase();
+        const filtered = cache.filter(
+          (u) =>
+            u.firstName.toLowerCase().includes(q) ||
+            u.lastName.toLowerCase().includes(q) ||
+            u.document.toLowerCase().includes(q)
+        );
+        renderRows(filtered);
+      }
+
+      searchInput.addEventListener("input", (e) => filterRows(e.target.value));
+      reloadBtn.addEventListener("click", fetchUsers);
+
+      fetchUsers();
+    </script>
+  </body>
+</html>
